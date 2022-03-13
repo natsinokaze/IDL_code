@@ -1,4 +1,5 @@
 pro set_65533_to_
+  ;将填充值（无效值）赋为空值
   input_directory='F:\xiangmu\LST\fy-站点\fy\fy_glt\buchong\'
   output_directory='F:\xiangmu\LST\fy-站点\fy\fy_glt_setnull_buchong\'
   
