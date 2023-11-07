@@ -60,6 +60,10 @@ pro Modis_Radiation_brightness
 
     modis_target_data=data
 
+    target_data_size=size(modis_target_data)
+    modis_lon_data=congrid(modis_lon_data,target_data_size[1],target_data_size[2],/interp)
+    modis_lat_data=congrid(modis_lat_data,target_data_size[1],target_data_size[2],/interp);核心！！！！
+    
     pos=where((modis_lon_data ge target_lon_min) and (modis_lon_data le target_lon_max) and $
       (modis_lat_data ge target_lat_min) and (modis_lat_data le target_lat_max),pos_n)
     if pos_n eq 0 then continue
