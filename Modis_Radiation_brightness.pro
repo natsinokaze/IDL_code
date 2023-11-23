@@ -91,7 +91,7 @@ pro Modis_Radiation_brightness
     output_proj=envi_proj_create(/geographic)
     envi_glt_doit,$
       x_fid=lon_fid,y_fid=lat_fid,x_pos=0,y_pos=0,i_proj=input_proj,$;指定创建GLT所需输入数据信息
-      o_proj=output_proj,pixel_size=0.03,rotation=0.0,out_name=out_name_glt,r_fid=obtained_glt_fid;指定输出GLT文件信息
+      o_proj=output_proj,pixel_size=0.01,rotation=0.0,out_name=out_name_glt,r_fid=obtained_glt_fid;指定输出GLT文件信息;注意分辨率！！！！！！！！！！！！！
 
     out_name_geo=output_directory+file_basename(file_list[i],'.hdf')+'_georef.img'
     out_name_geo_hdr=output_directory+file_basename(file_list[i],'.hdf')+'_georef.hdr'
