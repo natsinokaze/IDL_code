@@ -4,9 +4,9 @@ pro era5_nc_to_and_tif
   envi, /restore_base_save_files
   envi_batch_init
 
-  input_dir='F:\yanjiusheng\Evapotranspiration\july_1960_2023\data\'
-  output_dir='F:\yanjiusheng\Evapotranspiration\july_1960_2023\slhf_glt\'
-  type='slhf'
+  input_dir='F:\yanjiusheng\Evapotranspiration\SEBS_data\ERA5\original\'
+  output_dir='F:\yanjiusheng\Evapotranspiration\SEBS_data\ERA5\ERA5_u10\'
+  type='u10'
   file_list=file_search(input_dir,'*.nc')
   ncfile_i=n_elements(file_list)
 
@@ -17,32 +17,38 @@ pro era5_nc_to_and_tif
     ID_Nc_File = ncdf_open(file_list[i], /nowrite)
 
     NCDF_LIST, file_list[i], /VARIABLES, /DIMENSIONS, /GATT, /VATT
-    
-    t2m_id = NCDF_VARID(ID_Nc_File, 't2m');空气温度
-    NCDF_VARGET, ID_Nc_File, t2m_id, t2m_arr
 
     lon_id = NCDF_VARID(ID_Nc_File, 'longitude');经度
     NCDF_VARGET, ID_Nc_File, lon_id, lon_arr
     lat_id = NCDF_VARID(ID_Nc_File, 'latitude');纬度
     NCDF_VARGET, ID_Nc_File, lat_id, lat_arr
-    d2m_id = NCDF_VARID(ID_Nc_File, 'd2m');露点温度
-    NCDF_VARGET, ID_Nc_File, d2m_id, d2m_arr
-    t2m_id = NCDF_VARID(ID_Nc_File, 't2m');空气温度
-    NCDF_VARGET, ID_Nc_File, t2m_id, t2m_arr
-    slhf_id = NCDF_VARID(ID_Nc_File, 'slhf');地表潜热
-    NCDF_VARGET, ID_Nc_File, slhf_id, slhf_arr
-    sshf_id = NCDF_VARID(ID_Nc_File, 'sshf');地表显热
-    NCDF_VARGET, ID_Nc_File, slhf_id, slhf_arr
-    time_id = NCDF_VARID(ID_Nc_File, 'time');时间
-    NCDF_VARGET, ID_Nc_File, time_id, time_arr
+;    t2m_id = NCDF_VARID(ID_Nc_File, 't2m');空气温度
+;    NCDF_VARGET, ID_Nc_File, t2m_id, t2m_arr
+;    d2m_id = NCDF_VARID(ID_Nc_File, 'd2m');露点温度
+;    NCDF_VARGET, ID_Nc_File, d2m_id, d2m_arr
+;    t2m_id = NCDF_VARID(ID_Nc_File, 't2m');空气温度
+;    NCDF_VARGET, ID_Nc_File, t2m_id, t2m_arr
+;    slhf_id = NCDF_VARID(ID_Nc_File, 'slhf');地表潜热
+;    NCDF_VARGET, ID_Nc_File, slhf_id, slhf_arr
+;    sshf_id = NCDF_VARID(ID_Nc_File, 'sshf');地表显热
+;    NCDF_VARGET, ID_Nc_File, slhf_id, slhf_arr
+;    time_id = NCDF_VARID(ID_Nc_File, 'time');时间
+;    NCDF_VARGET, ID_Nc_File, time_id, time_arr
     
     target_id=NCDF_VARID(ID_NC_File,type)
     Ncdf_VARGET,ID_NC_FILE,TARGET_ID,target_arr
     
+    time_id=NCDF_VARID(ID_NC_File,'time')
+    Ncdf_VARGET,ID_NC_FILE,time_ID,time_arr
+    days=time_arr/24
+    hours=time_arr mod 24
+    caldat, julday(1,1,1900)+ days ,m,d,y
+    print,m,d,y
+    
     ncdf_attget,ID_Nc_File,target_id,'scale_factor',scale
     ncdf_attget,ID_Nc_File,target_id,'add_offset',offset
     
-    help,lon_arr,lat_arr,d2m_arr,t2m_arr,slhf_arr,sshf_arr
+    help,lon_arr,lat_arr,target_arr
     lat_i=size(lat_arr)
     lon_i=size(lon_arr)
     lat_arr=reform(lat_arr,1,lat_i[1])
@@ -79,12 +85,27 @@ pro era5_nc_to_and_tif
     ;  envi_open_file, glt_file_name, r_fid=fid
     ;  envi_file_query,fid,dims=dims,nb=nb,nl=nl,ns=ns
     
-    data_size=size(slhf_arr)  
+    data_size=size(target_arr)  
     
     for j=0,data_size[3]-1 do begin
-      year=1960+j
+      year=y[j]
       year=string(year)
       year=year.compress()
+      month=m[j]
+      month=string(month)
+      month=month.compress()
+      day=d[j]
+      day=string(day)
+      day=day.compress()
+      hour=hours[j]
+      if hour lt 10 then begin
+        hour=string(hour)
+        hour='0'+hour.compress()
+      endif else begin
+        hour=string(hour)
+        hour=hour.compress()
+      endelse
+      
       
       envi_open_file,out_lon,r_fid=lon_fid;打开经度数据，获取经度文件id
       envi_open_file,out_lat,r_fid=lat_fid;打开纬度数据，获取纬度文件id
@@ -124,7 +145,7 @@ pro era5_nc_to_and_tif
         GEOGLINEARUNITSGEOKEY:9001,$
         GEOGANGULARUNITSGEOKEY:9102}
 
-      write_tiff,output_dir+type+'_'+year+'.tiff',target_data1,/float,geotiff=geo_info
+      write_tiff,output_dir+type+'_'+year+'_'+month+'_'+day+'_'+hour+'_00'+'.tiff',target_data1,/float,geotiff=geo_info
 
       envi_file_mng,id=lon_fid,/remove
       envi_file_mng,id=lat_fid,/remove
@@ -152,9 +173,13 @@ pro era5_nc_to_and_tif
 
     print,i
   endfor
-
-
-
+  FILE_DELETE,output_dir+'lat_out.tiff'
+  FILE_DELETE,output_dir+'lon_out.tiff'
+  FILE_DELETE,output_dir+'target.tiff'
+  FILE_DELETE,output_dir+file_basename(file_list[0],'.nc')+'_georef.img'
+  FILE_DELETE,output_dir+file_basename(file_list[0],'.nc')+'_georef.hdr'
+  FILE_DELETE,output_dir+file_basename(file_list[0],'.nc')+'_glt.hdr'
+  FILE_DELETE,output_dir+file_basename(file_list[0],'.nc')+'_glt.img'
   ;关闭
   envi_batch_exit
 end
