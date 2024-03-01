@@ -51,7 +51,7 @@ pro Modis_Radiation_brightness
   
   for i=0,file_n-1 do begin
     data=hdf4_data_get(file_list[i],'EV_1KM_Emissive')
-    data=(data[*,*,band_pos]-offset[0])*scale[0]
+    data=data[*,*,band_pos]*scale[0]+offset[0]
     out_tiff=output_directory+file_basename(file_list[i],'.hdf')+'.tiff';获取输出文件的名称
     
     start_time=systime(1)
